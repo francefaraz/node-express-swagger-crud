@@ -1,0 +1,96 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('usernamePassword') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'gitlab',
+                        usernameVariable: 'username',
+                        passwordVariable: 'password'
+                    )]) {
+                        // Avoid printing sensitive information
+                        echo "Username: ${username}"
+                        // Avoid printing the password
+                        echo "Password: [hidden]"
+                    }
+                }
+            }
+        }
+
+        stage('usernameColonPassword') {
+            steps {
+                script {
+                    withCredentials([usernameColonPassword(
+                        credentialsId: 'gitlab',
+                        variable: 'userpass'
+                    )]) {
+                        // Avoid printing sensitive information
+                        echo "Userpass: [hidden]"
+                    }
+                }
+            }
+        }
+
+        stage('string (secret text)') {
+            steps {
+                script {
+                    withCredentials([string(
+                        credentialsId: 'joke-of-the-day',
+                        variable: 'joke'
+                    )]) {
+                        // Avoid printing the joke directly
+                        echo "Joke: [hidden]"
+                    }
+                }
+            }
+        }
+
+        stage('sshUserPrivateKey') {
+            steps {
+                script {
+                    withCredentials([sshUserPrivateKey(
+                        credentialsId: 'production-bastion',
+                        keyFileVariable: 'keyFile',
+                        passphraseVariable: 'passphrase',
+                        usernameVariable: 'username'
+                    )]) {
+                        // Avoid printing sensitive information
+                        echo "Username: ${username}"
+                        // Avoid printing the key file and passphrase
+                        echo "Key File: [hidden]"
+                        echo "Passphrase: [hidden]"
+                    }
+                }
+            }
+        }
+
+        stage('dockerCert') {
+            steps {
+                script {
+                    withCredentials([dockerCert(
+                        credentialsId: 'production-docker-ee-certificate',
+                        variable: 'DOCKER_CERT_PATH'
+                    )]) {
+                        // Avoid printing sensitive information
+                        echo "DOCKER_CERT_PATH: ${DOCKER_CERT_PATH}"
+                        // Avoid printing the certificate contents
+                        echo "CA.pem Content: [hidden]"
+                        echo "Cert.pem Content: [hidden]"
+                        echo "Key.pem Content: [hidden]"
+                    }
+                }
+            }
+        }
+
+        stage('list credentials ids') {
+            steps {
+                script {
+                    // Ensure you have the right permissions to access this
+                    sh 'cat $JENKINS_HOME/credentials.xml | grep "<id>"'
+                }
+            }
+        }
+    }
+}
