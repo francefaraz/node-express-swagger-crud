@@ -1,0 +1,46 @@
+pipeline {
+    agent none // The default agent is set to none, meaning no agent is assigned by default.
+    stages {
+        stage('Stage 1') {
+            agent any // This stage will run on any available agent.
+            steps {
+                script {
+                    echo 'This stage is blocking the executor because of the "agent any"'
+                }
+            }
+        }
+        stage('Stage 2') {
+            agent none // This stage does not run on any agent by default.
+            steps {
+                timeout(time: 1, unit: 'MINUTES') { // This block has a timeout of 1 minute.
+                    script {
+                        echo 'This stage does not block an executor because of "agent none"'
+                        milestone 1 // Marks the first milestone in this stage.
+                        
+                        // Input for user confirmation
+                        inputResponse = input([
+                            message : 'Please confirm.', // Message to display to the user
+                            submitterParameter: 'submitter', // Name of the parameter for the user who submitted the input
+                            parameters : [
+                                [$class: 'BooleanParameterDefinition', defaultValue: true, name: 'param1', description: 'description1'],
+                                [$class: 'ChoiceParameterDefinition', choices: 'choice1\nchoice2', name: 'param2', description: 'description2']
+                            ]
+                        ])
+                        
+                        milestone 2 // Marks the second milestone in this stage.
+                        echo "Input response: ${inputResponse}" // Output the user's input response.
+                    }
+                }
+            }
+        }
+        stage('Stage 3') {
+            agent any // This stage will also run on any available agent.
+            steps {
+                script {
+                    echo 'This stage is blocking the executor because of the "agent any"'
+                    sh 'sleep 15' // Simulates a 15-second wait.
+                }
+            }
+        }
+    }
+}
